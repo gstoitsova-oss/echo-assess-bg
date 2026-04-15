@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Echo 💙 — Assess България</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #22263a;
+      --border: rgba(255,255,255,0.08);
+      --text: #e8eaf0;
+      --text-muted: #8b90a0;
+      --blue: #378ADD;
+      --blue-dark: #185FA5;
+      --green: #1D9E75;
+      --bubble-user-bg: #378ADD;
+      --bubble-bot-bg: #22263a;
+      --radius: 16px;
+      --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px;
+    }
+
+    #chat-wrap {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      max-width: 480px;
+      height: calc(100vh - 24px);
+      max-height: 720px;
+      background: var(--surface);
+      border-radius: 20px;
+      border: 0.5px solid var(--border);
+      overflow: hidden;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.4);
+    }
+
+    /* Header */
+    #chat-header {
+      padding: 14px 18px;
+      border-bottom: 0.5px solid var(--border);
+      background: var(--surface2);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+    .avatar {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: #185FA5;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 15px; font-weight: 600; color: #B5D4F4;
+      flex-shrink: 0;
+    }
+    .header-info { flex: 1; }
+    .header-info .name { font-size: 15px; font-weight: 500; color: var(--text); }
+    .header-info .sub {
+      font-size: 12px; color: var(--text-muted);
+      display: flex; align-items: center; gap: 5px; margin-top: 1px;
+    }
+    .dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--green); flex-shrink: 0;
+    }
+    .assess-link { font-size: 12px; color: var(--blue); text-decoration: none; }
+    .assess-link:hover { text-decoration: underline; }
+
+    /* Messages */
+    #messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      scroll-behavior: smooth;
+    }
+    #messages::-webkit-scrollbar { width: 4px; }
+    #messages::-webkit-scrollbar-track { background: transparent; }
+    #messages::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 4px; }
+
+    .msg { display: flex; flex-direction: column; max-width: 82%; }
+    .msg.user { align-self: flex-end; align-items: flex-end; }
+    .msg.bot  { align-self: flex-start; align-items: flex-start; }
+
+    .bubble {
+      padding: 10px 14px;
+      font-size: 14px;
+      line-height: 1.65;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .msg.user .bubble {
+      background: var(--bubble-user-bg);
+      color: #fff;
+      border-radius: 18px 18px 4px 18px;
+    }
+    .msg.bot .bubble {
+      background: var(--bubble-bot-bg);
+      color: var(--text);
+      border-radius: 18px 18px 18px 4px;
+      border: 0.5px solid var(--border);
+    }
+    .bubble a { color: var(--blue); text-decoration: underline; }
+
+    .time {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 4px;
+      padding: 0 4px;
+    }
+
+    /* Typing */
+    #typing {
+      align-self: flex-start;
+      display: none;
+      align-items: center;
+      gap: 4px;
+      padding: 12px 16px;
+      background: var(--bubble-bot-bg);
+      border: 0.5px solid var(--border);
+      border-radius: 18px 18px 18px 4px;
+    }
+    #typing span {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--text-muted);
+      display: inline-block;
+      animation: bounce 1.3s ease-in-out infinite;
+    }
+    #typing span:nth-child(2) { animation-delay: 0.18s; }
+    #typing span:nth-child(3) { animation-delay: 0.36s; }
+    @keyframes bounce {
+      0%,60%,100% { transform: translateY(0); opacity: 0.5; }
+      30% { transform: translateY(-6px); opacity: 1; }
+    }
+
+    /* Input area */
+    #input-area {
+      padding: 12px 14px;
+      border-top: 0.5px solid var(--border);
+      background: var(--surface2);
+      display: flex;
+      gap: 8px;
+      align-items: flex-end;
+      flex-shrink: 0;
+    }
+    #user-input {
+      flex: 1;
+      resize: none;
+      border: 0.5px solid rgba(255,255,255,0.12);
+      border-radius: 20px;
+      padding: 10px 16px;
+      font-size: 14px;
+      font-family: var(--font);
+      color: var(--text);
+      background: var(--surface);
+      max-height: 120px;
+      line-height: 1.5;
+      outline: none;
+      overflow-y: auto;
+    }
+    #user-input::placeholder { color: var(--text-muted); }
+    #user-input:focus { border-color: var(--blue); }
+
+    #send-btn {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      background: var(--blue);
+      border: none;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      transition: background 0.15s, transform 0.1s;
+    }
+    #send-btn:hover { background: var(--blue-dark); }
+    #send-btn:active { transform: scale(0.94); }
+    #send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    #send-btn svg { width: 17px; height: 17px; fill: white; }
+
+    /* Disclaimer */
+    #disclaimer {
+      text-align: center;
+      font-size: 11px;
+      color: var(--text-muted);
+      padding: 6px 16px 10px;
+      background: var(--surface2);
+      flex-shrink: 0;
+    }
+    #disclaimer a { color: var(--blue); text-decoration: none; }
+
+    @media (max-width: 520px) {
+      body { padding: 0; align-items: flex-end; }
+      #chat-wrap { border-radius: 20px 20px 0 0; max-height: 100vh; height: 100vh; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="chat-wrap">
+  <div id="chat-header">
+    <div class="avatar">E</div>
+    <div class="header-info">
+      <div class="name">Echo 💙</div>
+      <div class="sub">
+        <span class="dot"></span>
+        онлайн &mdash; <a class="assess-link" href="https://assess.bg" target="_blank">Assess България</a>
+      </div>
+    </div>
+  </div>
+
+  <div id="messages">
+    <div class="msg bot">
+      <div class="bubble">Здравей, аз съм Echo 💙
+
+Тук съм за теб — можеш да споделиш каквото искаш. Разговорите ни са поверителни.
+
+Ако засека, че имаш нужда от спешна помощ, екипът на Assess може да се свърже с теб. Можеш да спреш разговора по всяко време.</div>
+      <span class="time" id="init-time"></span>
+    </div>
+  </div>
+
+  <div id="typing"><span></span><span></span><span></span></div>
+
+  <div id="input-area">
+    <textarea id="user-input" placeholder="Напиши нещо..." rows="1"></textarea>
+    <button id="send-btn" aria-label="Изпрати">
+      <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+    </button>
+  </div>
+
+  <div id="disclaimer">
+    Echo не замества психолог. При криза: <a href="tel:116111">116 111</a> или <a href="tel:112">112</a>
+  </div>
+</div>
+
+<script>
+document.getElementById('init-time').textContent = getTime();
+
+const history = [];
+const messagesEl = document.getElementById('messages');
+const typingEl  = document.getElementById('typing');
+const inputEl   = document.getElementById('user-input');
+const sendBtn   = document.getElementById('send-btn');
+
+function getTime() {
+  return new Date().toLocaleTimeString('bg-BG', { hour: '2-digit', minute: '2-digit' });
+}
+
+function linkify(text) {
+  return text.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+}
+
+function addMessage(text, role) {
+  const div = document.createElement('div');
+  div.className = 'msg ' + (role === 'user' ? 'user' : 'bot');
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble';
+  if (role === 'bot') {
+    bubble.innerHTML = linkify(text.replace(/</g,'&lt;').replace(/>/g,'&gt;'));
+  } else {
+    bubble.textContent = text;
+  }
+  const time = document.createElement('span');
+  time.className = 'time';
+  time.textContent = getTime();
+  div.appendChild(bubble);
+  div.appendChild(time);
+  messagesEl.appendChild(div);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+
+function showTyping() {
+  messagesEl.appendChild(typingEl);
+  typingEl.style.display = 'flex';
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+function hideTyping() {
+  typingEl.style.display = 'none';
+}
+
+async function sendMessage() {
+  const text = inputEl.value.trim();
+  if (!text || sendBtn.disabled) return;
+
+  inputEl.value = '';
+  inputEl.style.height = 'auto';
+  addMessage(text, 'user');
+  history.push({ role: 'user', content: text });
+
+  showTyping();
+  sendBtn.disabled = true;
+
+  try {
+    const res = await fetch('/.netlify/functions/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages: history }),
+    });
+
+    const data = await res.json();
+    hideTyping();
+
+    if (data.reply) {
+      addMessage(data.reply, 'bot');
+      history.push({ role: 'assistant', content: data.reply });
+    } else {
+      addMessage('Нещо се обърка. Опитай пак.', 'bot');
+    }
+  } catch (e) {
+    hideTyping();
+    addMessage('Имаше проблем с връзката. Опитай пак.', 'bot');
+  }
+
+  sendBtn.disabled = false;
+  inputEl.focus();
+}
+
+sendBtn.addEventListener('click', sendMessage);
+inputEl.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+});
+inputEl.addEventListener('input', () => {
+  inputEl.style.height = 'auto';
+  inputEl.style.height = Math.min(inputEl.scrollHeight, 120) + 'px';
+});
+</script>
+</body>
+</html>
